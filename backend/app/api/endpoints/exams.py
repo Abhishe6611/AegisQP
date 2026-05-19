@@ -192,7 +192,10 @@ def get_active_blueprint(teacher_email: str, db: Session = Depends(get_db)):
     """Get the latest active blueprint assigned to a teacher."""
     session = (
         db.query(ExamSession)
-        .filter(ExamSession.teacher_email == teacher_email, ExamSession.status == "Assigned to Teacher")
+        .filter(
+            ExamSession.teacher_email == teacher_email, 
+            ExamSession.status.in_(["Assigned to Teacher", "REJECTED"])
+        )
         .order_by(desc(ExamSession.created_at))
         .first()
     )
@@ -287,6 +290,12 @@ def review_submission(sub_id: str, data: ReviewAction, db: Session = Depends(get
     sub.status = data.action
     sub.review_comment = data.comment
     sub.reviewed_at = datetime.utcnow()
+
+    # Update ExamSession status so the teacher knows it was rejected or approved
+    if sub.exam_session_id:
+        session = db.query(ExamSession).filter(ExamSession.id == sub.exam_session_id).first()
+        if session:
+            session.status = data.action
 
     # Notify teacher
     msg = f"Your QP for {sub.subject} has been {data.action}."

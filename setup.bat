@@ -27,6 +27,7 @@ echo.
 echo [*] Installing AI Service Dependencies...
 cd ..\ai-service
 pip install -r requirements.txt
+python -m bloom_ai.py
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to install AI service requirements.
     pause

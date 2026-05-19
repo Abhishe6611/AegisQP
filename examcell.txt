@@ -1,0 +1,630 @@
+AI-Powered Multi-University Examination Governance Platform
+Final Enterprise Framework Architecture
+
+1. PLATFORM OVERVIEW
+System Type
+Enterprise-grade AI-assisted Examination Governance & Question Paper Management Platform.
+The platform supports:
+Multiple universities
+Multiple departments
+Multiple semesters simultaneously
+Internal & external faculty
+AI-assisted Bloom taxonomy transformation
+Secure encrypted question paper workflows
+COE-controlled governance
+Audit compliance
+Automated answer key generation
+Dynamic university-specific templates
+
+2. CORE PLATFORM OBJECTIVES
+The system is designed to solve:
+Problem
+Solution
+Manual QP preparation
+AI-assisted smart preparation
+Question leakage risk
+Encryption + watermarking
+Bloom taxonomy inconsistency
+AI transformation engine
+Multi-semester management difficulty
+Parallel workflow orchestration
+External faculty handling
+Controlled secure access
+Manual formatting
+Dynamic template engine
+Weak auditability
+Immutable audit logs
+Delayed approvals
+Structured workflow engine
+
+3. ENTERPRISE ARCHITECTURE
+┌────────────────────────────────────────────┐
+│                FRONTEND                    │
+│ Next.js + TypeScript + Tailwind            │
+└────────────────────────────────────────────┘
+                      │
+                      ▼
+┌────────────────────────────────────────────┐
+│                API GATEWAY                 │
+│ Authentication • Rate Limit • Audit        │
+└────────────────────────────────────────────┘
+                      │
+ ┌────────────────────┼───────────────────┐
+ ▼                    ▼                   ▼
+
+Auth Service      Exam Service       AI Service
+RBAC              Workflow Engine    Bloom Engine
+MFA               Scheduling         Rephrasing
+Sessions          Approvals          Answer Key Gen
+
+ ▼                    ▼                   ▼
+
+┌────────────────────────────────────────────┐
+│            DOCUMENT ENGINE                 │
+│ DOCX Generator • PDF Generator             │
+│ Watermarking • Fingerprinting              │
+└────────────────────────────────────────────┘
+
+                      ▼
+
+┌────────────────────────────────────────────┐
+│          ENCRYPTED DATA LAYER              │
+│ PostgreSQL + MinIO Object Storage          │
+│ AES-256 Encryption                         │
+└────────────────────────────────────────────┘
+
+                      ▼
+
+┌────────────────────────────────────────────┐
+│            AUDIT & MONITORING              │
+│ Immutable Logs • Device Tracking           │
+│ Security Analytics                         │
+└────────────────────────────────────────────┘
+
+4. SYSTEM MODULES
+A. Multi-Tenant University Management Module
+Supports:
+multiple universities
+separate regulations
+isolated templates
+isolated exam sessions
+
+Main Entities
+University
+University
+ ├── Departments
+ ├── Regulations
+ ├── Templates
+ ├── Exam Sessions
+ └── Users
+
+B. Authentication & Security Module
+Roles
+Role
+Responsibility
+Super Admin
+Global platform
+COE
+University control
+Internal Teacher
+QP preparation
+External Teacher
+Restricted QP preparation
+Auditor
+Read-only audit
+Moderator
+Optional validation
+
+Security Features
+Mandatory Security
+JWT Authentication
+Refresh Tokens
+MFA for COE
+AES-256 encryption
+Device fingerprinting
+Session monitoring
+Secure password hashing (Argon2id)
+Login anomaly detection
+IP tracking
+Auto account expiry for externals
+
+C. Examination Session Management Module
+This is the ROOT workflow engine.
+
+Exam Session Structure
+Exam Session
+   ↓
+Departments
+   ↓
+Semesters
+   ↓
+Subjects
+   ↓
+Teacher Assignments
+   ↓
+Question Papers
+
+Example
+NOV/DEC 2026 Examination
+ ├── MCA Sem 1
+ ├── MCA Sem 3
+ ├── BCA Sem 5
+ ├── MBA Sem 2
+All handled simultaneously.
+
+D. Teacher & Subject Mapping Engine
+COE controls:
+Teacher assignments
+Semester allocation
+Subject allocation
+Deadline assignment
+Internal/external role mapping
+
+Mapping Flow
+Teacher
+   ↓
+Assigned Subject
+   ↓
+Semester
+   ↓
+Exam Session
+   ↓
+Question Paper Workflow
+
+E. Question Paper Workflow Engine
+Core workflow orchestration module.
+
+Full Workflow
+COE Creates Exam Session
+        ↓
+Semesters Added
+        ↓
+Subjects Assigned
+        ↓
+Teachers Assigned
+        ↓
+Teacher Creates Questions
+        ↓
+AI Bloom Transformation
+        ↓
+Validation Engine
+        ↓
+Preview & Edit
+        ↓
+Answer Key Generation
+        ↓
+Submission
+        ↓
+COE Review
+        ↓
+Approve / Reject
+        ↓
+Final Lock
+        ↓
+Encrypted Archive
+
+5. AI ENGINE ARCHITECTURE
+Recommended AI Stack
+Component
+Recommendation
+Primary LLM
+Kimi K2.5
+Validation Layer
+Local NLP pipeline
+Embedding Model
+bge-large
+Duplicate Detection
+Vector similarity
+Queue Engine
+Celery + Redis
+
+AI Responsibilities
+AI Feature
+Function
+Bloom Transformation
+Rephrase question
+Taxonomy Validation
+Validate cognitive level
+Grammar Optimization
+Academic correctness
+Duplicate Detection
+Prevent repetition
+Difficulty Balancing
+Maintain standards
+Answer Key Generation
+Auto-create answer keys
+CO Validation
+Validate course outcome mapping
+Unit Distribution Check
+Verify syllabus coverage
+
+6. BLOOM TAXONOMY ENGINE
+Workflow
+Teacher enters question
+        ↓
+Selects Bloom level
+        ↓
+AI detects current level
+        ↓
+AI transforms question
+        ↓
+Changes highlighted
+        ↓
+Teacher approves/rejects
+
+Example
+Input:
+Define Operating System
+Selected:
+Analyze
+AI Output:
+Analyze how operating systems manage process scheduling and memory allocation in distributed environments.
+
+7. QUESTION PAPER PATTERN ENGINE
+Dynamic Template Architecture
+NO hardcoding.
+Everything configurable.
+
+Template Configuration
+{
+  "section_a": {
+    "questions": 10,
+    "marks": 2
+  },
+  "section_b": {
+    "questions": 5,
+    "marks": 13
+  }
+}
+
+Supported Rules
+OR choice
+Internal choice
+Unit balancing
+Bloom balancing
+Difficulty balancing
+CO mapping
+Regulation-specific formats
+
+8. SMART QUESTION ENTRY UI
+Teacher Interface
+┌──────────────────────────────┐
+│ Question Input               │
+├──────────────────────────────┤
+│ Unit                         │
+│ CO Mapping                   │
+│ Bloom Dropdown               │
+│ Difficulty Level             │
+│ Marks                        │
+│ AI Rephrase Button           │
+│ AI Suggestions Panel         │
+└──────────────────────────────┘
+
+AI Assistance Features
+Bloom mismatch warning
+Duplicate detection
+Grammar fixes
+Marks suitability analysis
+Question quality score
+
+9. QUESTION BANK ENGINE
+Centralized reusable repository.
+
+Features
+reusable questions
+AI semantic search
+bloom filters
+semester filters
+CO filters
+regulation filters
+difficulty filters
+duplicate detection
+
+10. ANSWER KEY GENERATION ENGINE
+AI generates:
+model answers
+keyword points
+evaluation hints
+step marking guidance
+
+11. DOCUMENT GENERATION ENGINE
+Output Formats
+DOCX
+PDF
+Encrypted archives
+
+Document Features
+Automatically includes:
+university logo
+exam code
+watermark
+QR verification
+digital fingerprint
+page numbering
+regulation formatting
+signatures
+
+12. COE CONTROL CENTER
+This becomes the operational command dashboard.
+
+Dashboard Sections
+Session Overview
+NOV/DEC 2026
+──────────────────
+Total QPs: 421
+Pending: 52
+Submitted: 311
+Rejected: 18
+Approved: 40
+
+Semester Tracking
+Semester
+Completion
+MCA Sem 1
+90%
+BCA Sem 3
+75%
+
+Department Analytics
+Department
+Pending
+MCA
+4
+MBA
+1
+
+13. IMMUTABLE AUDIT LOG SYSTEM
+Every action tracked.
+
+Audit Data Captured
+User
+Role
+IP Address
+Device
+Timestamp
+Action
+Previous Value
+New Value
+
+Logged Activities
+login
+logout
+edit
+AI generation
+download
+preview
+export
+submission
+approval
+rejection
+
+14. DOCUMENT SECURITY FRAMEWORK
+Leakage Prevention
+Mandatory:
+invisible watermarking
+user traceability
+encrypted PDFs
+download expiration
+export tracking
+preview streaming
+
+15. DEADLINE MANAGEMENT ENGINE
+Supports:
+session-level deadlines
+semester deadlines
+subject deadlines
+
+Deadline Hierarchy
+Global Session Deadline
+        ↓
+Semester Deadline
+        ↓
+Subject Deadline
+
+16. EVENT-DRIVEN PROCESSING
+Because:
+many teachers
+many semesters
+parallel AI requests
+parallel exports
+occur simultaneously.
+
+Queue Architecture
+Teacher Request
+      ↓
+Queue
+      ↓
+AI Processing
+      ↓
+Document Generation
+      ↓
+Response Returned
+
+17. DATABASE ARCHITECTURE
+Recommended Database
+PostgreSQL
+
+Core Tables
+universities
+departments
+regulations
+semesters
+subjects
+course_outcomes
+teachers
+teacher_subject_mapping
+exam_sessions
+question_papers
+questions
+question_versions
+answer_keys
+templates
+audit_logs
+deadlines
+approvals
+notifications
+
+Database Features
+row-level security
+partitioning
+transaction safety
+tenant isolation
+encrypted columns
+
+18. FRONTEND ARCHITECTURE
+Recommended Stack
+Layer
+Tech
+Framework
+Next.js
+Language
+TypeScript
+UI
+TailwindCSS
+Components
+shadcn/ui
+State
+Zustand
+Forms
+React Hook Form
+
+Sidebar Structure
+Dashboard
+Exam Sessions
+Question Papers
+Question Bank
+Approvals
+Audit Logs
+Templates
+Departments
+Users
+Analytics
+Settings
+
+19. BACKEND ARCHITECTURE
+Recommended Stack
+Layer
+Tech
+API
+FastAPI
+ORM
+SQLAlchemy
+Validation
+Pydantic
+Queue
+Celery
+Cache
+Redis
+Search
+OpenSearch
+Storage
+MinIO/S3
+
+20. AI MICROSERVICE ARCHITECTURE
+Separate AI service for scalability.
+
+AI Service Responsibilities
+Bloom Engine
+Answer Key Engine
+Duplicate Detection
+Difficulty Analyzer
+Question Validator
+Formatting Assistant
+
+21. DEPLOYMENT ARCHITECTURE
+Recommended
+Kubernetes-Based Deployment
+Frontend Pods
+Backend Pods
+AI Service Pods
+Redis Cluster
+PostgreSQL Cluster
+MinIO Storage
+Monitoring Stack
+
+22. MONITORING & OBSERVABILITY
+Tools
+Function
+Tool
+Metrics
+Prometheus
+Visualization
+Grafana
+Logs
+Loki
+Alerts
+AlertManager
+
+23. FUTURE AI FEATURES
+Architecture must remain extensible for:
+multilingual QP generation
+plagiarism detection
+syllabus coverage heatmaps
+AI moderation
+automatic paper balancing
+predictive analytics
+AI-generated alternative papers
+automated moderation assistance
+
+24. DEVELOPMENT PHASES
+Phase 1
+Core platform
+auth
+RBAC
+QP builder
+AI rephrase
+PDF/DOCX export
+
+Phase 2
+Workflow expansion
+approvals
+audit logs
+question bank
+semester orchestration
+
+Phase 3
+Advanced AI
+analytics
+difficulty balancing
+plagiarism
+smart recommendations
+
+Phase 4
+Enterprise scaling
+multilingual support
+AI moderation
+advanced reporting
+
+25. FINAL ENGINEERING PRINCIPLES
+NEVER hardcode:
+question patterns
+Bloom rules
+university regulations
+semester structures
+Everything MUST be:
+configurable
+metadata-driven
+template-driven
+tenant-isolated
+LOW-COST INTELLIGENT PIPELINE
+Question Submitted
+       ↓
+Rule Engine Check
+       ↓
+Duplicate Check
+       ↓
+Cache Check
+       ↓
+If needed → API Call
+       ↓
+Store Result
+
+FINAL PLATFORM CLASSIFICATION
+This is now an:
+Enterprise AI Examination Governance & Secure Question Paper Orchestration Platform
+suitable for:
+universities
+autonomous colleges
+examination boards
+accreditation environments
+large-scale academic institutions.

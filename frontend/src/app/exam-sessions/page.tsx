@@ -11,6 +11,7 @@ export default function ExamSessionsPage() {
   
   const [activeTab, setActiveTab] = useState("history");
   const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionFilter, setSessionFilter] = useState("all");
   const [currentEditId, setCurrentEditId] = useState<string | null>(null);
 
   const [examDetails, setExamDetails] = useState({
@@ -51,6 +52,31 @@ export default function ExamSessionsPage() {
       .then(data => setCourses(data))
       .catch(err => console.error("Failed to load courses:", err));
   }, []);
+
+  const normalizeStatus = (status?: string) => (status || "").toLowerCase().trim();
+
+  const sessionCounts = sessions.reduce(
+    (acc, s) => {
+      const status = normalizeStatus(s.status);
+      acc.all += 1;
+      if (status === "assigned to teacher") acc.assigned += 1;
+      else if (status === "submitted by teacher") acc.review += 1;
+      else if (status === "approved") acc.approved += 1;
+      else if (status === "rejected") acc.rejected += 1;
+      return acc;
+    },
+    { all: 0, assigned: 0, review: 0, approved: 0, rejected: 0 }
+  );
+
+  const filteredSessions = sessions.filter(s => {
+    const status = normalizeStatus(s.status);
+    if (sessionFilter === "all") return true;
+    if (sessionFilter === "assigned") return status === "assigned to teacher";
+    if (sessionFilter === "review") return status === "submitted by teacher";
+    if (sessionFilter === "approved") return status === "approved";
+    if (sessionFilter === "rejected") return status === "rejected";
+    return true;
+  });
 
   const handleAddSection = () => {
     setBlueprint([
@@ -164,58 +190,117 @@ export default function ExamSessionsPage() {
               <List className="w-8 h-8" /> Exam Sessions
             </h2>
 
-            {sessions.length === 0 ? (
-              <div className="bg-white border-2 border-dashed border-gray-400 p-12 text-center text-gray-500 font-bold uppercase tracking-widest">
-                No Exam Sessions Created Yet
-              </div>
-            ) : (
-              sessions.map(session => (
-                <div key={session.id} className="bg-white border-2 border-black p-6 shadow-[6px_6px_0px_0px_rgba(10,25,47,1)] relative">
-                  <div className="absolute top-6 right-6 flex gap-2">
-                    <button 
-                      onClick={() => {
-                        setExamDetails({
-                          title: session.title,
-                          department: session.department,
-                          semester: session.semester,
-                          subject: session.subject,
-                          courseCode: session.courseCode || "",
-                          duration: session.duration || "3 Hours",
-                          teacherEmail: session.teacherEmail
-                        });
-                        setBlueprint(session.sections.map((s: any, i: number) => ({ id: i + 1, ...s })));
-                        setCurrentEditId(session.id);
-                        setActiveTab("create");
-                      }}
-                      className="px-4 py-2 bg-gray-100 border-2 border-black font-bold uppercase text-xs hover:bg-gray-200 transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(session.id)}
-                      className="px-4 py-2 bg-red-100 border-2 border-red-600 text-red-700 font-bold uppercase text-xs hover:bg-red-200 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: "assigned", label: "Assigned", count: sessionCounts.assigned },
+                { id: "review", label: "Under Review", count: sessionCounts.review },
+                { id: "approved", label: "Approved", count: sessionCounts.approved },
+                { id: "rejected", label: "Rejected", count: sessionCounts.rejected },
+                { id: "all", label: "All", count: sessionCounts.all },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSessionFilter(tab.id)}
+                  className={`px-4 py-2 border-2 border-black font-bold text-xs uppercase transition-colors ${sessionFilter === tab.id ? "bg-[#0a192f] text-white" : "bg-white text-black hover:bg-gray-100"}`}
+                >
+                  {tab.label} ({tab.count})
+                </button>
+              ))}
+            </div>
 
-                  <div className="flex justify-between items-start mb-4 border-b-2 border-gray-200 pb-4 pr-32">
-                    <div>
-                      <h3 className="text-2xl font-black uppercase">{session.title}</h3>
-                      <p className="text-sm font-bold text-gray-600 uppercase">{session.department} | {session.semester} | {session.subject} ({session.courseCode})</p>
+            {(() => {
+              if (sessions.length === 0) {
+                return (
+                  <div className="bg-white border-2 border-dashed border-gray-400 p-12 text-center text-gray-500 font-bold uppercase tracking-widest">
+                    No Exam Sessions Created Yet
+                  </div>
+                );
+              }
+              if (filteredSessions.length === 0) {
+                return (
+                  <div className="bg-white border-2 border-dashed border-gray-300 p-12 text-center text-gray-500 font-bold uppercase tracking-widest">
+                    No Sessions In This Category
+                  </div>
+                );
+              }
+
+              // Build tree: Semester -> Department -> Sessions
+              const tree: Record<string, Record<string, any[]>> = {};
+              filteredSessions.forEach(s => {
+                const sem = s.semester || "Unknown Semester";
+                const dept = s.department || "Unknown Department";
+                if (!tree[sem]) tree[sem] = {};
+                if (!tree[sem][dept]) tree[sem][dept] = [];
+                tree[sem][dept].push(s);
+              });
+
+              return (
+                <div className="space-y-12">
+                  {Object.keys(tree).sort().map(sem => (
+                    <div key={sem} className="bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(10,25,47,1)]">
+                      <h3 className="text-2xl font-black uppercase mb-6 border-b-4 border-black pb-2 text-[#0a192f]">
+                        {sem}
+                      </h3>
+                      <div className="space-y-8">
+                        {Object.keys(tree[sem]).sort().map(dept => (
+                          <div key={dept} className="ml-0 md:ml-4 border-l-4 border-[#dc2626] pl-4">
+                            <h4 className="text-xl font-bold uppercase mb-4 text-[#dc2626]">{dept}</h4>
+                            <div className="space-y-4">
+                              {tree[sem][dept].map(session => (
+                                <div key={session.id} className="bg-gray-50 border-2 border-black p-4 relative hover:bg-white transition-colors">
+                                  <div className="absolute top-4 right-4 flex gap-2">
+                                    <button 
+                                      onClick={() => {
+                                        setExamDetails({
+                                          title: session.title,
+                                          department: session.department,
+                                          semester: session.semester,
+                                          subject: session.subject,
+                                          courseCode: session.courseCode || "",
+                                          duration: session.duration || "3 Hours",
+                                          teacherEmail: session.teacherEmail
+                                        });
+                                        setBlueprint(session.sections.map((s: any, i: number) => ({ id: i + 1, ...s })));
+                                        setCurrentEditId(session.id);
+                                        setActiveTab("create");
+                                      }}
+                                      className="px-3 py-1 bg-white border-2 border-black font-bold uppercase text-[10px] hover:bg-gray-100 transition-colors"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button 
+                                      onClick={() => handleDelete(session.id)}
+                                      className="px-3 py-1 bg-red-50 border-2 border-red-600 text-red-700 font-bold uppercase text-[10px] hover:bg-red-100 transition-colors"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+
+                                  <div className="flex justify-between items-start mb-3 border-b-2 border-gray-200 pb-3 pr-24">
+                                    <div>
+                                      <h5 className="text-lg font-black uppercase">{session.title}</h5>
+                                      <p className="text-xs font-bold text-gray-600 uppercase">{session.subject} ({session.courseCode})</p>
+                                    </div>
+                                    <span className="bg-yellow-100 border-2 border-yellow-500 text-yellow-700 px-2 py-0.5 text-[10px] font-bold uppercase">
+                                      {session.status}
+                                    </span>
+                                  </div>
+                                  <div className="text-xs font-bold text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
+                                    <p>Assigned to: <span className="text-black">{session.teacherEmail}</span></p>
+                                    <p>Created on: <span className="text-black">{session.createdAt ? new Date(session.createdAt).toLocaleDateString() : "N/A"}</span></p>
+                                    <p>Sections: <span className="text-black">{session.sections.length}</span></p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <span className="bg-yellow-100 border-2 border-yellow-500 text-yellow-700 px-3 py-1 text-xs font-bold uppercase">
-                      {session.status}
-                    </span>
-                  </div>
-                  <div className="text-sm font-bold text-gray-500">
-                    <p>Assigned to: {session.teacherEmail}</p>
-                    <p>Created on: {session.createdAt ? new Date(session.createdAt).toLocaleDateString() : "N/A"}</p>
-                    <p>Sections defined: {session.sections.length}</p>
-                  </div>
+                  ))}
                 </div>
-              ))
-            )}
+              );
+            })()}
           </div>
         ) : (
           <div className="space-y-8">

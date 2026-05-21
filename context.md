@@ -50,14 +50,14 @@ Enterprise-grade AI-assisted Examination Governance & Question Paper Management 
 
 **3. Academic Workflow (COE)**
 
-- **Exam Sessions (`/exam-sessions`):** Dynamic dropdowns that auto-fill Course Codes based on the selected Course Name.
+- **Exam Sessions (`/exam-sessions`):** Dynamic dropdowns that auto-fill Course Codes based on the selected Course Name. The History tab features **categorical segregation**, rendering a hierarchical view of exam sessions grouped by Semester and Department.
 - COE can define blueprints (Section Name, Question Count, Marks).
 - **Review Submissions (`/review-qps`):** Replaced flat search with a hierarchical **Shelf Browser** (collapsible accordion tree grouped by Semester -> Department -> Subject -> Submissions).
 - **Print & Export Standardization:** Implemented `@media print` CSS rules (`print-color-adjust: exact`, margin clearing, and strict `page-break-inside: avoid` table behaviors) to perfectly mimic formal university `.docx` templates when exporting submissions to PDF.
 
 **4. Question Paper Building (Teacher)**
 
-- **Strict Blueprint Builder (`/qp-builder`):** Left panel strictly maps to the COE's assigned blueprint.
+- **Strict Blueprint Builder (`/qp-builder`):** Left panel strictly maps to the COE's assigned blueprint. Teachers can handle **multiple concurrent assignments** via a horizontal selector that lets them hot-swap between pending blueprints.
 - Integrated AI-driven Bloom's Taxonomy rephrasing (`ai-service/bloom_ai.py` using Qwen 2.5). Iterated prompts to ensure robust, strict adherence to taxonomy templates without generating useless repetitive patterns.
 - Right panel provides a live preview table mirroring the identical strict `.docx` structure seen in the COE review page, fully print-ready.
 

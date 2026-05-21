@@ -58,11 +58,10 @@ def seed_database():
 
     try:
         db.commit()
-        print("✅ Database seeding completed successfully!")
+        print("Database seeding completed successfully!")
     except Exception as e:
         db.rollback()
-        print(f"❌ Error during seeding: {e}")
+        print(f"Error during seeding: {e}")
 
 if __name__ == "__main__":
     seed_database()
-

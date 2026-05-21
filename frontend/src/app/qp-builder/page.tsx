@@ -6,9 +6,19 @@ import { ArrowLeft, Sparkles, Save, FileText, Bot, AlertCircle } from "lucide-re
 
 const API = "http://localhost:8000/api/v1/exams";
 
+const bloomToRBT: Record<string, number> = {
+  "Remember": 1,
+  "Understand": 2,
+  "Apply": 3,
+  "Analyze": 4,
+  "Evaluate": 5,
+  "Create": 6
+};
+
 export default function QPBuilderPage() {
   const router = useRouter();
   
+  const [assignments, setAssignments] = useState<any[]>([]);
   const [blueprint, setBlueprint] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [isTransforming, setIsTransforming] = useState(false);
@@ -16,35 +26,40 @@ export default function QPBuilderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const handleSelectBlueprint = (selectedBlueprint: any) => {
+    setBlueprint(selectedBlueprint);
+    const slots: any[] = [];
+    if (selectedBlueprint && selectedBlueprint.sections) {
+      for (let s = 0; s < selectedBlueprint.sections.length; s++) {
+        const section = selectedBlueprint.sections[s];
+        const count = Number(section.count) || 0;
+        const marks = Number(section.marks) || 0;
+        for (let i = 0; i < count; i++) {
+          slots.push({
+            id: `sec-${s}-q-${i}`,
+            sectionIndex: s,
+            sectionName: section.section,
+            marks: marks,
+            text: "",
+            targetLevel: marks > 2 ? "Analyze" : "Understand",
+            indexInSection: i + 1
+          });
+        }
+      }
+    }
+    setQuestions(slots);
+    setFinalPaper([]);
+  };
+
   useEffect(() => {
-    // Fetch the active blueprint from the API based on the logged-in teacher's email
     const teacherEmail = localStorage.getItem("user_email") || "teacher@university.edu";
     
     fetch(`${API}/sessions/active?teacher_email=${encodeURIComponent(teacherEmail)}`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.sections && data.sections.length > 0) {
-          setBlueprint(data);
-          
-          // Build question slots from ALL sections
-          const slots: any[] = [];
-          for (let s = 0; s < data.sections.length; s++) {
-            const section = data.sections[s];
-            const count = Number(section.count) || 0;
-            const marks = Number(section.marks) || 0;
-            for (let i = 0; i < count; i++) {
-              slots.push({
-                id: `sec-${s}-q-${i}`,
-                sectionIndex: s,
-                sectionName: section.section,
-                marks: marks,
-                text: "",
-                targetLevel: marks > 2 ? "Analyze" : "Understand",
-                indexInSection: i + 1
-              });
-            }
-          }
-          setQuestions(slots);
+        if (Array.isArray(data) && data.length > 0) {
+          setAssignments(data);
+          handleSelectBlueprint(data[0]);
         }
         setLoading(false);
       })
@@ -288,6 +303,27 @@ export default function QPBuilderPage() {
       </nav>
 
       <main className="max-w-[95%] xl:max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        {assignments.length > 1 && (
+          <div className="lg:col-span-12 mb-2">
+            <h2 className="text-sm font-black uppercase text-gray-500 mb-3">Pending Assignments ({assignments.length})</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+              {assignments.map(a => (
+                <button
+                  key={a.id}
+                  onClick={() => handleSelectBlueprint(a)}
+                  className={`flex-shrink-0 px-6 py-4 border-2 border-black font-bold uppercase transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-none text-left ${blueprint?.id === a.id ? "bg-[#0a192f] text-white" : "bg-white text-black"}`}
+                >
+                  <div className="text-lg">{a.subject}</div>
+                  <div className="text-xs mt-1 opacity-80">{a.courseCode} | {a.semester}</div>
+                  <div className={`text-[10px] mt-2 inline-block px-2 py-1 border ${a.status === 'REJECTED' ? 'bg-red-500 border-red-700 text-white' : 'bg-gray-200 border-black text-black'}`}>
+                    {a.status}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Left Column */}
         <div className="lg:col-span-6 space-y-6">

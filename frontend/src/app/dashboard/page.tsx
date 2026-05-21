@@ -8,7 +8,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -30,10 +29,6 @@ export default function DashboardPage() {
         const userData = await response.json();
         setUser(userData);
         
-        // Mock notifications reading from localStorage
-        const allNotifs = JSON.parse(localStorage.getItem("notifications") || "[]");
-        setNotifications(allNotifs.filter((n: any) => n.toRole === userData.role || n.toEmail === userData.email));
-        
       } catch (err) {
         localStorage.removeItem("access_token");
         router.push("/login");
@@ -48,14 +43,6 @@ export default function DashboardPage() {
   const handleLogout = () => {
     localStorage.removeItem("access_token");
     router.push("/login");
-  };
-
-  const clearNotifications = () => {
-    setNotifications([]);
-    // Optionally clear from localStorage
-    const allNotifs = JSON.parse(localStorage.getItem("notifications") || "[]");
-    const remaining = allNotifs.filter((n: any) => n.toRole !== user?.role && n.toEmail !== user?.email);
-    localStorage.setItem("notifications", JSON.stringify(remaining));
   };
 
   if (loading) return (
@@ -96,25 +83,6 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-12">
         
-        {/* Notifications Bar */}
-        {notifications.length > 0 && (
-          <div className="mb-8 bg-blue-50 border-2 border-blue-900 p-4 flex justify-between items-start shadow-[4px_4px_0px_0px_rgba(30,58,138,1)]">
-            <div>
-              <h4 className="font-black text-blue-900 uppercase flex items-center gap-2 mb-2">
-                <Bell className="w-4 h-4 animate-bounce" /> Notifications ({notifications.length})
-              </h4>
-              <ul className="space-y-1 text-sm font-medium text-blue-800">
-                {notifications.map((n, i) => (
-                  <li key={i}>• {n.message}</li>
-                ))}
-              </ul>
-            </div>
-            <button onClick={clearNotifications} className="text-xs font-bold uppercase bg-white border-2 border-blue-900 px-2 py-1 hover:bg-blue-100 transition-colors">
-              Clear All
-            </button>
-          </div>
-        )}
-
         {/* COE Dashboard */}
         {user?.role === "COE" && (
           <>

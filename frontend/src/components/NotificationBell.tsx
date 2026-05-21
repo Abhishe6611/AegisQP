@@ -25,7 +25,7 @@ export default function NotificationBell() {
 
   const fetchNotifications = useCallback(async (role: string, email: string) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/exams/notifications?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`);
+      const res = await fetch(`/api/v1/exams/notifications?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`);
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
@@ -42,8 +42,9 @@ export default function NotificationBell() {
     try {
       // Get User
       if (!user) {
-        const userRes = await fetch("http://localhost:8000/api/v1/auth/me", {
-          headers: { "Authorization": `Bearer ${token}` }
+        const userRes = await fetch("/api/v1/auth/me", {
+          headers: {
+          "ngrok-skip-browser-warning": "69420", "Authorization": `Bearer ${token}` }
         });
         if (userRes.ok) {
           const userData: User = await userRes.json();
@@ -61,7 +62,7 @@ export default function NotificationBell() {
   const clearNotifications = async () => {
     if (!user) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/exams/notifications/clear?role=${encodeURIComponent(user.role)}&email=${encodeURIComponent(user.email)}`, {
+      const res = await fetch(`/api/v1/exams/notifications/clear?role=${encodeURIComponent(user.role)}&email=${encodeURIComponent(user.email)}`, {
         method: "DELETE"
       });
       if (res.ok) {

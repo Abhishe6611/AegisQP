@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, UserPlus, Trash2, Building, PlusCircle, CheckCircle, Search } from "lucide-react";
 
-const API = "http://localhost:8000/api/v1/core";
+const API = "/api/v1/core";
 
 export default function SuperadminPage() {
   const router = useRouter();
@@ -62,7 +62,8 @@ export default function SuperadminPage() {
     try {
       const res = await fetch(`${API}/users`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify(newUser)
       });
       if (!res.ok) {
@@ -97,7 +98,8 @@ export default function SuperadminPage() {
       };
       const res = await fetch(`${API}/courses`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
@@ -133,7 +135,8 @@ export default function SuperadminPage() {
     try {
       const res = await fetch(`${API}/settings`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify(settings)
       });
       if (res.ok) {

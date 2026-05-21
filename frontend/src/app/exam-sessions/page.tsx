@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Plus, Trash2, FilePlus, List } from "lucide-react";
 
-const API = "http://localhost:8000/api/v1/exams";
+const API = "/api/v1/exams";
 
 export default function ExamSessionsPage() {
   const router = useRouter();
@@ -47,7 +47,7 @@ export default function ExamSessionsPage() {
       .then(data => setSessions(data))
       .catch(err => console.error("Failed to load sessions:", err));
       
-    fetch("http://localhost:8000/api/v1/core/courses")
+    fetch("/api/v1/core/courses")
       .then(res => res.json())
       .then(data => setCourses(data))
       .catch(err => console.error("Failed to load courses:", err));
@@ -110,14 +110,16 @@ export default function ExamSessionsPage() {
       if (currentEditId) {
         const res = await fetch(`${API}/sessions/${currentEditId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+          "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         result = await res.json();
       } else {
         const res = await fetch(`${API}/sessions`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+          "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         result = await res.json();

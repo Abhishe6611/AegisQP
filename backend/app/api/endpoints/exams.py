@@ -8,6 +8,10 @@ from app.api.deps import get_db
 from app.models.exam import ExamSession, QPSubmission, Notification
 from app.models.core import AuditLog
 import uuid
+import os
+import json
+import httpx
+from app.core.config import settings
 
 router = APIRouter()
 
@@ -58,6 +62,10 @@ class NotificationCreate(BaseModel):
     to_role: Optional[str] = None
     to_email: Optional[str] = None
     message: str
+
+class AITransformRequest(BaseModel):
+    questions: List[dict]
+    subject: Optional[str] = None
 
 
 # ---- Exam Session Endpoints ----
@@ -177,6 +185,10 @@ def delete_session(session_id: str, db: Session = Depends(get_db)):
     session = db.query(ExamSession).filter(ExamSession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
+        
+    # Cascade delete any submissions related to this session
+    db.query(QPSubmission).filter(QPSubmission.exam_session_id == session_id).delete()
+    
     db.delete(session)
     
     # Audit log
@@ -190,36 +202,43 @@ def delete_session(session_id: str, db: Session = Depends(get_db)):
 @router.get("/sessions/active")
 def get_active_blueprint(teacher_email: str, db: Session = Depends(get_db)):
     """Get the latest active blueprint assigned to a teacher."""
-    session = (
+    sessions = (
         db.query(ExamSession)
         .filter(
             ExamSession.teacher_email == teacher_email, 
             ExamSession.status.in_(["Assigned to Teacher", "REJECTED"])
         )
         .order_by(desc(ExamSession.created_at))
-        .first()
+        .all()
     )
-    if not session:
-        return None
-    return {
-        "id": str(session.id),
-        "title": session.title,
-        "department": session.department,
-        "semester": session.semester,
-        "subject": session.subject,
-        "courseCode": session.course_code,
-        "duration": session.duration,
-        "teacherEmail": session.teacher_email,
-        "sections": session.sections,
-        "status": session.status,
-    }
+    if not sessions:
+        return []
+    
+    return [
+        {
+            "id": str(s.id),
+            "title": s.title,
+            "department": s.department,
+            "semester": s.semester,
+            "subject": s.subject,
+            "courseCode": s.course_code,
+            "duration": s.duration,
+            "teacherEmail": s.teacher_email,
+            "sections": s.sections,
+            "status": s.status,
+        }
+        for s in sessions
+    ]
 
 
 # ---- QP Submission Endpoints ----
 
 @router.get("/submissions")
-def list_submissions(db: Session = Depends(get_db)):
-    subs = db.query(QPSubmission).order_by(desc(QPSubmission.submitted_at)).all()
+def list_submissions(teacher_email: Optional[str] = None, db: Session = Depends(get_db)):
+    query = db.query(QPSubmission)
+    if teacher_email:
+        query = query.filter(QPSubmission.teacher_email == teacher_email)
+    subs = query.order_by(desc(QPSubmission.submitted_at)).all()
     result = []
     for s in subs:
         result.append({
@@ -311,6 +330,48 @@ def review_submission(sub_id: str, data: ReviewAction, db: Session = Depends(get
 
     db.commit()
     return {"status": sub.status}
+
+
+@router.post("/ai-transform")
+async def ai_transform(data: AITransformRequest):
+    # Forward the request to the local AI microservice
+    ai_service_url = "http://localhost:8001/generate"
+    
+    payload = {
+        "subject": data.subject,
+        "questions": [
+            {
+                "id": i,
+                "text": q.get("text", ""),
+                "targetLevel": q.get("targetLevel", "Understand")
+            }
+            for i, q in enumerate(data.questions)
+        ]
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(ai_service_url, json=payload)
+            response.raise_for_status()
+            
+            result_data = response.json()
+            mapped_results = { item["id"]: item["transformedText"] for item in result_data.get("questions", []) }
+            
+            final_questions = []
+            for i, q in enumerate(data.questions):
+                final_questions.append({
+                    **q,
+                    "transformedText": mapped_results.get(i, q.get("text", ""))
+                })
+                
+            return {"questions": final_questions}
+            
+    except httpx.RequestError as e:
+        print("Error contacting local AI microservice:", str(e))
+        raise HTTPException(status_code=503, detail="AI Service is currently unavailable. Ensure the microservice is running on port 8001.")
+    except Exception as e:
+        print("Local AI Transformation Error:", str(e))
+        raise HTTPException(status_code=500, detail=f"Local AI Transformation failed: {str(e)}")
 
 
 # ---- Notification Endpoints ----

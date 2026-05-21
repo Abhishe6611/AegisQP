@@ -10,7 +10,7 @@ export default function AuditLogsPage() {
   const [logs, setLogs] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    fetch("http://localhost:8000/api/v1/core/audit-logs")
+    fetch("/api/v1/core/audit-logs")
       .then(res => res.json())
       .then(data => setLogs(data))
       .catch(err => console.error(err));

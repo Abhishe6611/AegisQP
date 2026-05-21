@@ -21,12 +21,13 @@ export default function LoginPage() {
       formData.append("username", email);
       formData.append("password", password);
 
-      const response = await fetch("http://localhost:8000/api/v1/auth/login", {
+      const response = await fetch("/api/v1/auth/login", {
         method: "POST",
         headers: {
+          "ngrok-skip-browser-warning": "69420",
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: formData,
+        body: formData.toString(),
       });
 
       if (!response.ok) {
@@ -40,6 +41,7 @@ export default function LoginPage() {
       
       router.push("/dashboard");
     } catch (err: any) {
+      alert("LOGIN ERROR: " + err.message);
       setError(err.message || "An error occurred during login.");
     } finally {
       setLoading(false);

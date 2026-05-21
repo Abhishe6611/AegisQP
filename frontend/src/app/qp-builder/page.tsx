@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Sparkles, Save, FileText, Bot, AlertCircle } from "lucide-react";
 
-const API = "http://localhost:8000/api/v1/exams";
+const API = "/api/v1/exams";
 
 const bloomToRBT: Record<string, number> = {
   "Remember": 1,
@@ -75,112 +75,6 @@ export default function QPBuilderPage() {
       q.id === id ? { ...q, [field]: value } : q
     ));
   };
-  // Bloom's Taxonomy transformation templates — massively expanded for variety
-  const bloomTemplates: Record<string, string[]> = {
-    "Remember": [
-      "Define {topic} and state its primary purpose.",
-      "List the key characteristics of {topic}.",
-      "State the fundamental principles behind {topic}.",
-      "Identify the main components involved in {topic}.",
-      "What is {topic}? Provide a clear definition with examples.",
-      "Recall and outline the basic concepts related to {topic}.",
-      "Name the primary elements associated with {topic}.",
-      "Outline the standard definition of {topic}.",
-      "Describe the basic function of {topic}.",
-      "Enumerate the steps involved in {topic}.",
-      "Identify and list the different types of {topic}.",
-      "Who, what, and where does {topic} primarily apply?",
-      "Reproduce the standard architecture of {topic}.",
-      "Recall the timeline or historical context of {topic}.",
-      "List the most common use cases for {topic}."
-    ],
-    "Understand": [
-      "Explain {topic} in your own words with suitable examples.",
-      "Summarize the concept of {topic} and its significance.",
-      "Describe {topic} and illustrate with a real-world scenario.",
-      "Interpret the role of {topic} in its broader context.",
-      "Classify the different aspects of {topic} and explain each briefly.",
-      "Discuss {topic} and highlight its key features.",
-      "Paraphrase and elaborate on the concept of {topic}.",
-      "Explain the underlying mechanism of {topic}.",
-      "Summarize the main advantages and disadvantages of {topic}.",
-      "Illustrate how {topic} operates within a larger system.",
-      "Translate the complex concept of {topic} into simple terms.",
-      "Discuss the implications of using {topic} in modern systems.",
-      "Explain the relationship between {topic} and its core dependencies.",
-      "Provide a descriptive overview of {topic}.",
-      "Clarify the meaning and scope of {topic}."
-    ],
-    "Apply": [
-      "Demonstrate how {topic} can be applied in a practical scenario.",
-      "Solve a practical problem using the principles of {topic}.",
-      "Implement a solution that utilizes {topic} for a given use case.",
-      "Apply the concepts of {topic} to address a real-world situation.",
-      "Using {topic}, illustrate a step-by-step approach to solve a problem.",
-      "Show how {topic} is used in industry with a worked example.",
-      "Calculate or estimate the required parameters using {topic}.",
-      "Execute a standard procedure based on {topic}.",
-      "Illustrate the application of {topic} in an enterprise environment.",
-      "Demonstrate the usage of {topic} to optimize a workflow.",
-      "Showcase a practical implementation strategy for {topic}.",
-      "Apply the rules of {topic} to determine the correct outcome.",
-      "Use {topic} to construct a basic working model.",
-      "Demonstrate the real-time application of {topic}.",
-      "Employ {topic} to resolve a common industry challenge."
-    ],
-    "Analyze": [
-      "Analyze the key factors that influence {topic} and their interrelationships.",
-      "Compare and contrast {topic} with its alternative approaches.",
-      "Examine the strengths and weaknesses of {topic} in detail.",
-      "Differentiate between the various methodologies within {topic}.",
-      "Break down {topic} into its constituent parts and analyze each component.",
-      "Investigate the cause-and-effect relationships in {topic}.",
-      "Analyze the performance implications of implementing {topic}.",
-      "Deconstruct {topic} to understand its underlying framework.",
-      "Examine the critical failure points associated with {topic}.",
-      "Compare the efficiency of {topic} against traditional methods.",
-      "Analyze the structural integrity or logic of {topic}.",
-      "Distinguish between the theoretical and practical aspects of {topic}.",
-      "Investigate the security or operational risks of {topic}.",
-      "Break down the lifecycle of {topic}.",
-      "Analyze the trade-offs involved in using {topic}."
-    ],
-    "Evaluate": [
-      "Evaluate the effectiveness of {topic} and justify your assessment.",
-      "Critically assess {topic} and provide arguments for and against it.",
-      "Judge the suitability of {topic} for an enterprise scenario with reasoning.",
-      "Appraise {topic} by comparing it against established benchmarks.",
-      "Assess the impact of {topic} and recommend improvements.",
-      "Critique the current implementation of {topic} and suggest refinements.",
-      "Evaluate the long-term sustainability and scalability of {topic}.",
-      "Defend the use of {topic} over its competitors.",
-      "Critically evaluate the ethical or privacy implications of {topic}.",
-      "Assess the cost-benefit ratio of deploying {topic}.",
-      "Judge the reliability and fault tolerance of {topic}.",
-      "Critique the standard methodologies associated with {topic}.",
-      "Evaluate how well {topic} solves the problem it was designed for.",
-      "Assess the potential future developments or obsolescence of {topic}.",
-      "Determine the value and relevance of {topic} in today's landscape."
-    ],
-    "Create": [
-      "Design a novel solution that incorporates {topic} for a specific problem.",
-      "Propose an innovative framework based on {topic} with a detailed plan.",
-      "Construct a comprehensive model using {topic} and explain your design choices.",
-      "Develop a new approach to {topic} that addresses its current limitations.",
-      "Formulate a strategy leveraging {topic} to achieve business objectives.",
-      "Create a prototype or blueprint that demonstrates {topic} in action.",
-      "Design an architecture that integrates {topic} with legacy systems.",
-      "Invent a new methodology that builds upon {topic}.",
-      "Develop a comprehensive testing strategy for {topic}.",
-      "Propose a migration plan to transition a system to {topic}.",
-      "Formulate a set of best practices for implementing {topic}.",
-      "Design a hybrid model combining {topic} with other technologies.",
-      "Create a scalable deployment plan for {topic}.",
-      "Develop a contingency or disaster recovery plan for {topic}.",
-      "Design an optimized algorithm or workflow based on {topic}."
-    ],
-  };
-
   const handleBatchTransform = async () => {
     const hasEmpty = questions.some(q => q.text.trim() === "");
     if (hasEmpty) {
@@ -190,37 +84,26 @@ export default function QPBuilderPage() {
 
     setIsTransforming(true);
 
-    setTimeout(() => {
-      // Track used template indices per level to avoid repeats
-      const usedIndices: Record<string, number[]> = {};
-
-      const transformedResults = questions.map(q => {
-        const level = q.targetLevel || "Understand";
-        const templates = bloomTemplates[level] || bloomTemplates["Understand"];
-        
-        // Pick a unique template index for this level
-        if (!usedIndices[level]) usedIndices[level] = [];
-        let idx: number;
-        const available = templates.map((_, i) => i).filter(i => !usedIndices[level].includes(i));
-        if (available.length === 0) {
-          // All used — reset and pick randomly
-          usedIndices[level] = [];
-          idx = Math.floor(Math.random() * templates.length);
-        } else {
-          idx = available[Math.floor(Math.random() * available.length)];
-        }
-        usedIndices[level].push(idx);
-
-        const template = templates[idx];
-        const topic = q.text.trim();
-        const transformedText = template.replace(/\{topic\}/g, topic.toLowerCase());
-
-        return { ...q, transformedText };
+    try {
+      const res = await fetch(`${API}/ai-transform`, {
+        method: "POST",
+        headers: {
+          "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
+        body: JSON.stringify({ questions })
       });
 
-      setFinalPaper(transformedResults);
+      if (!res.ok) {
+        throw new Error("AI Transformation failed");
+      }
+
+      const data = await res.json();
+      setFinalPaper(data.questions);
+    } catch (err) {
+      console.error("Transform error:", err);
+      alert("Error during AI transformation. Please check the console and ensure backend is running with Gemini API key.");
+    } finally {
       setIsTransforming(false);
-    }, 2000);
+    }
   };
 
   const handleSubmitToCOE = async () => {
@@ -232,7 +115,8 @@ export default function QPBuilderPage() {
     try {
       const res = await fetch(`${API}/submissions`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify({
           exam_session_id: blueprint.id,
           title: blueprint.title,

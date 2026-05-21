@@ -18,8 +18,9 @@ export default function DashboardPage() {
       }
 
       try {
-        const response = await fetch("http://localhost:8000/api/v1/auth/me", {
+        const response = await fetch("/api/v1/auth/me", {
           headers: {
+          "ngrok-skip-browser-warning": "69420",
             "Authorization": `Bearer ${token}`
           }
         });
@@ -29,7 +30,8 @@ export default function DashboardPage() {
         const userData = await response.json();
         setUser(userData);
         
-      } catch (err) {
+      } catch (err: any) {
+        alert("DASHBOARD ERROR: " + err.message);
         localStorage.removeItem("access_token");
         router.push("/login");
       } finally {
@@ -168,7 +170,10 @@ export default function DashboardPage() {
                 <p className="text-sm text-gray-600">Start drafting a new paper using the AI Bloom Transformer.</p>
               </div>
 
-              <div className="bg-white border-2 border-black p-6 shadow-[6px_6px_0px_0px_rgba(10,25,47,1)] hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(10,25,47,1)] transition-all cursor-pointer opacity-50">
+              <div 
+                onClick={() => router.push("/past-submissions")}
+                className="bg-white border-2 border-black p-6 shadow-[6px_6px_0px_0px_rgba(10,25,47,1)] hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_rgba(10,25,47,1)] transition-all cursor-pointer"
+              >
                 <FileText className="w-8 h-8 text-[#0a192f] mb-4" />
                 <h3 className="text-xl font-bold mb-2 uppercase">Past Submissions</h3>
                 <p className="text-sm text-gray-600">View previously submitted and approved papers.</p>

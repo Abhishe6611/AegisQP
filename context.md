@@ -28,6 +28,8 @@ Enterprise-grade AI-assisted Examination Governance & Question Paper Management 
 * **Frontend:** `cd frontend && npm run dev`
 * **Seed DB:** `cd backend && .\venv\Scripts\python.exe seed.py`
 * **Create Superadmin:** `cd backend && .\venv\Scripts\python.exe create_superadmin.py`
+ngrok http 3000 --host-header=rewrite
+
 
 ---
 

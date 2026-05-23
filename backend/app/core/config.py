@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     # Database (These will be automatically loaded from .env)
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_PASSWORD: str = "1234"
     POSTGRES_DB: str = "examcell"
     
     @computed_field

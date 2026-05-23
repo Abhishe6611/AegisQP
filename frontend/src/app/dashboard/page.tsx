@@ -11,7 +11,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
       if (!token) {
         router.push("/login");
         return;
@@ -32,7 +32,7 @@ export default function DashboardPage() {
         
       } catch (err: any) {
         alert("DASHBOARD ERROR: " + err.message);
-        localStorage.removeItem("access_token");
+        sessionStorage.removeItem("access_token");
         router.push("/login");
       } finally {
         setLoading(false);
@@ -43,7 +43,7 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
+    sessionStorage.removeItem("access_token");
     router.push("/login");
   };
 

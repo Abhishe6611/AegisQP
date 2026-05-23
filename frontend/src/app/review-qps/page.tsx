@@ -20,9 +20,25 @@ export default function ReviewQPsPage() {
   const [expandedSubj, setExpandedSubj] = useState<string | null>(null);
   const [selectedPaper, setSelectedPaper] = useState<any>(null);
   const [rejectionComment, setRejectionComment] = useState("");
+  const [collegeLogo, setCollegeLogo] = useState("/clglogo.png");
 
   useEffect(() => {
-    fetch(`${API}/submissions`)
+    // Fetch College Settings for Logo
+    fetch(`${API}/core/settings`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.logo_path) setCollegeLogo(data.logo_path);
+      })
+      .catch(err => console.error(err));
+
+    const token = sessionStorage.getItem("access_token");
+    if (!token) {
+        router.push("/login");
+        return;
+    }
+    fetch(`${API}/submissions`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         const sorted = data.sort((a: any, b: any) => (a.status === "PENDING_REVIEW" ? -1 : 1));
@@ -38,16 +54,18 @@ export default function ReviewQPsPage() {
     }
 
     try {
+      const token = sessionStorage.getItem("access_token");
       const res = await fetch(`${API}/submissions/${selectedPaper.id}/review`, {
         method: "PUT",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify({ action: status, comment: rejectionComment || null }),
       });
 
       if (!res.ok) throw new Error("Review failed");
 
-      const refreshRes = await fetch(`${API}/submissions`);
+      const refreshRes = await fetch(`${API}/submissions`, { headers: { "Authorization": `Bearer ${token}` } });
       const refreshed = await refreshRes.json();
       setSubmissions(refreshed.sort((a: any, b: any) => (a.status === "PENDING_REVIEW" ? -1 : 1)));
       
@@ -197,7 +215,7 @@ export default function ReviewQPsPage() {
                 {/* Header with Logo and USN */}
                 <div className="flex justify-between items-center p-4">
                   <div className="w-[180px]">
-                    <img src="/clglogo.png" alt="College Logo" className="w-full h-auto object-contain" />
+                    <img src={collegeLogo} alt="College Logo" className="w-full h-auto object-contain" />
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm uppercase">USN</span>

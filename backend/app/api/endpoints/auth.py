@@ -7,6 +7,7 @@ from app.api import deps
 from app.core import security
 from app.core.config import settings
 from app.models.user import User
+from app.models.core import AuditLog
 from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserResponse
 
@@ -26,6 +27,15 @@ def login_access_token(
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
         
+    # Add audit log for successful login
+    log = AuditLog(
+        action_type="USER_LOGIN",
+        actor=user.email,
+        details=f"User {user.email} logged in successfully."
+    )
+    db.add(log)
+    db.commit()
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_access_token(

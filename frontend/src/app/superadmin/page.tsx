@@ -43,9 +43,11 @@ export default function SuperadminPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const token = sessionStorage.getItem("access_token");
+      const headers = { "Authorization": `Bearer ${token}` };
       const [uRes, cRes, sRes] = await Promise.all([
-        fetch(`${API}/users`),
-        fetch(`${API}/courses`),
+        fetch(`${API}/users`, { headers }),
+        fetch(`${API}/courses`, { headers }),
         fetch(`${API}/settings`)
       ]);
       setUsers(await uRes.json());
@@ -60,9 +62,11 @@ export default function SuperadminPage() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = sessionStorage.getItem("access_token");
       const res = await fetch(`${API}/users`, {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify(newUser)
       });
@@ -81,7 +85,8 @@ export default function SuperadminPage() {
   const handleDeleteUser = async (id: string) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
-      await fetch(`${API}/users/${id}`, { method: "DELETE" });
+      const token = sessionStorage.getItem("access_token");
+      await fetch(`${API}/users/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
       fetchData();
     } catch (err) {
       console.error(err);
@@ -91,6 +96,7 @@ export default function SuperadminPage() {
   const handleAddCourse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = sessionStorage.getItem("access_token");
       const payload = {
         ...newCourse,
         department: selectedDept,
@@ -99,6 +105,7 @@ export default function SuperadminPage() {
       const res = await fetch(`${API}/courses`, {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
@@ -123,7 +130,8 @@ export default function SuperadminPage() {
   const handleDeleteCourse = async (id: string) => {
     if (!confirm("Are you sure you want to delete this course?")) return;
     try {
-      await fetch(`${API}/courses/${id}`, { method: "DELETE" });
+      const token = sessionStorage.getItem("access_token");
+      await fetch(`${API}/courses/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
       fetchData();
     } catch (err) {
       console.error(err);
@@ -133,9 +141,11 @@ export default function SuperadminPage() {
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = sessionStorage.getItem("access_token");
       const res = await fetch(`${API}/settings`, {
         method: "PUT",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify(settings)
       });

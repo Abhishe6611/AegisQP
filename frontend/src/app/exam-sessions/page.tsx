@@ -42,12 +42,15 @@ export default function ExamSessionsPage() {
 
   // Load sessions from API
   useEffect(() => {
-    fetch(`${API}/sessions`)
+    const token = sessionStorage.getItem("access_token");
+    if (!token) return;
+
+    fetch(`${API}/sessions`, { headers: { "Authorization": `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => setSessions(data))
       .catch(err => console.error("Failed to load sessions:", err));
       
-    fetch("/api/v1/core/courses")
+    fetch("/api/v1/core/courses", { headers: { "Authorization": `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => setCourses(data))
       .catch(err => console.error("Failed to load courses:", err));
@@ -107,10 +110,12 @@ export default function ExamSessionsPage() {
 
     try {
       let result;
+      const token = sessionStorage.getItem("access_token");
       if (currentEditId) {
         const res = await fetch(`${API}/sessions/${currentEditId}`, {
           method: "PUT",
           headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
@@ -119,6 +124,7 @@ export default function ExamSessionsPage() {
         const res = await fetch(`${API}/sessions`, {
           method: "POST",
           headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
@@ -126,7 +132,7 @@ export default function ExamSessionsPage() {
       }
 
       // Reload sessions from API
-      const refreshRes = await fetch(`${API}/sessions`);
+      const refreshRes = await fetch(`${API}/sessions`, { headers: { "Authorization": `Bearer ${token}` } });
       const refreshed = await refreshRes.json();
       setSessions(refreshed);
 
@@ -149,7 +155,8 @@ export default function ExamSessionsPage() {
   const handleDelete = async (sessionId: string) => {
     if (!confirm("Are you sure you want to delete this exam session?")) return;
     try {
-      await fetch(`${API}/sessions/${sessionId}`, { method: "DELETE" });
+      const token = sessionStorage.getItem("access_token");
+      await fetch(`${API}/sessions/${sessionId}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` } });
       setSessions(sessions.filter(s => s.id !== sessionId));
     } catch (err) {
       console.error("Failed to delete:", err);

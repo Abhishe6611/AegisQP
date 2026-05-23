@@ -1,7 +1,8 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.api.deps import get_db
+from app.api.deps import get_db, require_role, get_current_user
+from app.schemas.user import User
 from app.models.user import User
 from app.models.core import Course, SystemSettings, AuditLog
 from pydantic import BaseModel
@@ -47,12 +48,12 @@ class SettingsUpdate(BaseModel):
 
 # Users endpoints
 @router.get("/users", response_model=List[UserResponse])
-def get_users(db: Session = Depends(get_db)):
+def get_users(db: Session = Depends(get_db), current_user: User = Depends(require_role(["SUPERADMIN"]))):
     users = db.query(User).all()
     return [{"id": str(u.id), "email": u.email, "role": u.role, "is_active": u.is_active} for u in users]
 
 @router.post("/users", response_model=UserResponse)
-def create_user(data: UserCreate, db: Session = Depends(get_db)):
+def create_user(data: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(require_role(["SUPERADMIN"]))):
     from app.core.security import get_password_hash
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
@@ -73,7 +74,7 @@ def create_user(data: UserCreate, db: Session = Depends(get_db)):
     return {"id": str(user.id), "email": user.email, "role": user.role, "is_active": user.is_active}
 
 @router.delete("/users/{user_id}")
-def delete_user(user_id: str, db: Session = Depends(get_db)):
+def delete_user(user_id: str, db: Session = Depends(get_db), current_user: User = Depends(require_role(["SUPERADMIN"]))):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -87,12 +88,12 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
 
 # Courses endpoints
 @router.get("/courses", response_model=List[CourseResponse])
-def get_courses(db: Session = Depends(get_db)):
+def get_courses(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     courses = db.query(Course).all()
     return [{"id": str(c.id), "name": c.name, "code": c.code, "department": c.department, "semester": c.semester} for c in courses]
 
 @router.post("/courses", response_model=CourseResponse)
-def create_course(data: CourseCreate, db: Session = Depends(get_db)):
+def create_course(data: CourseCreate, db: Session = Depends(get_db), current_user: User = Depends(require_role(["SUPERADMIN"]))):
     existing_code = db.query(Course).filter(Course.code == data.code).first()
     if existing_code:
         raise HTTPException(status_code=400, detail="Course code already exists")
@@ -112,7 +113,7 @@ def create_course(data: CourseCreate, db: Session = Depends(get_db)):
     return {"id": str(course.id), "name": course.name, "code": course.code, "department": course.department, "semester": course.semester}
 
 @router.delete("/courses/{course_id}")
-def delete_course(course_id: str, db: Session = Depends(get_db)):
+def delete_course(course_id: str, db: Session = Depends(get_db), current_user: User = Depends(require_role(["SUPERADMIN"]))):
     course = db.query(Course).filter(Course.id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
@@ -136,7 +137,7 @@ def get_settings(db: Session = Depends(get_db)):
     return {"college_name": settings.college_name, "logo_path": settings.logo_path}
 
 @router.put("/settings")
-def update_settings(data: SettingsUpdate, db: Session = Depends(get_db)):
+def update_settings(data: SettingsUpdate, db: Session = Depends(get_db), current_user: User = Depends(require_role(["SUPERADMIN"]))):
     settings = db.query(SystemSettings).first()
     if not settings:
         settings = SystemSettings()
@@ -153,6 +154,6 @@ def update_settings(data: SettingsUpdate, db: Session = Depends(get_db)):
     return {"college_name": settings.college_name, "logo_path": settings.logo_path}
 
 @router.get("/audit-logs", response_model=List[AuditLogResponse])
-def get_audit_logs(db: Session = Depends(get_db)):
+def get_audit_logs(db: Session = Depends(get_db), current_user: User = Depends(require_role(["SUPERADMIN"]))):
     logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
     return [{"id": str(log.id), "action_type": log.action_type, "actor": log.actor, "details": log.details, "timestamp": log.timestamp.isoformat()} for log in logs]

@@ -10,7 +10,13 @@ export default function AuditLogsPage() {
   const [logs, setLogs] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    fetch("/api/v1/core/audit-logs")
+    const token = sessionStorage.getItem("access_token");
+    if (!token) {
+        router.push("/login");
+        return;
+    }
+
+    fetch("/api/v1/core/audit-logs", { headers: { "Authorization": `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => setLogs(data))
       .catch(err => console.error(err));
@@ -60,7 +66,7 @@ export default function AuditLogsPage() {
                 {logs.map((log, i) => (
                   <tr key={log.id} className={`border-b border-gray-200 hover:bg-gray-50 ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
                     <td className="p-4 font-medium text-gray-500 whitespace-nowrap">
-                      {new Date(log.timestamp).toLocaleString()}
+                      {new Date(log.timestamp).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 text-[10px] font-bold uppercase border border-black ${

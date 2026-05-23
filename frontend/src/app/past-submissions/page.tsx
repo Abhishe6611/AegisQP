@@ -19,8 +19,15 @@ export default function PastSubmissionsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const teacherEmail = localStorage.getItem("user_email") || "teacher@university.edu";
-    fetch(`${API}/submissions?teacher_email=${encodeURIComponent(teacherEmail)}`)
+    const token = sessionStorage.getItem("access_token");
+    if (!token) {
+        router.push("/login");
+        return;
+    }
+    const teacherEmail = sessionStorage.getItem("user_email") || "teacher@university.edu";
+    fetch(`${API}/submissions?teacher_email=${encodeURIComponent(teacherEmail)}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         setSubmissions(data);

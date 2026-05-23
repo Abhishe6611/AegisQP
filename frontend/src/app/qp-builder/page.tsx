@@ -25,6 +25,17 @@ export default function QPBuilderPage() {
   const [finalPaper, setFinalPaper] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [collegeLogo, setCollegeLogo] = useState("/clglogo.png");
+
+  useEffect(() => {
+    // Fetch College Settings for Logo
+    fetch(`${API}/core/settings`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.logo_path) setCollegeLogo(data.logo_path);
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   const handleSelectBlueprint = (selectedBlueprint: any) => {
     setBlueprint(selectedBlueprint);
@@ -52,9 +63,16 @@ export default function QPBuilderPage() {
   };
 
   useEffect(() => {
-    const teacherEmail = localStorage.getItem("user_email") || "teacher@university.edu";
+    const token = sessionStorage.getItem("access_token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+    const teacherEmail = sessionStorage.getItem("user_email") || "teacher@university.edu";
     
-    fetch(`${API}/sessions/active?teacher_email=${encodeURIComponent(teacherEmail)}`)
+    fetch(`${API}/sessions/active?teacher_email=${encodeURIComponent(teacherEmail)}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
@@ -85,9 +103,11 @@ export default function QPBuilderPage() {
     setIsTransforming(true);
 
     try {
+      const token = sessionStorage.getItem("access_token");
       const res = await fetch(`${API}/ai-transform`, {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify({ questions })
       });
@@ -113,9 +133,11 @@ export default function QPBuilderPage() {
     }
 
     try {
+      const token = sessionStorage.getItem("access_token");
       const res = await fetch(`${API}/submissions`, {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${token}`,
           "ngrok-skip-browser-warning": "69420", "Content-Type": "application/json" },
         body: JSON.stringify({
           exam_session_id: blueprint.id,
@@ -123,7 +145,7 @@ export default function QPBuilderPage() {
           department: blueprint.department,
           semester: blueprint.semester,
           subject: blueprint.subject,
-          teacher_email: localStorage.getItem("user_email") || "teacher@university.edu",
+          teacher_email: sessionStorage.getItem("user_email") || "teacher@university.edu",
           paper: finalPaper,
         }),
       });
@@ -298,7 +320,7 @@ export default function QPBuilderPage() {
               {/* Header with Logo and USN */}
               <div className="flex justify-between items-center mb-4">
                 <div className="w-[120px]">
-                  <img src="/clglogo.png" alt="College Logo" className="w-full h-auto object-contain" />
+                  <img src={collegeLogo} alt="College Logo" className="w-full h-auto object-contain" />
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-xs uppercase">USN</span>

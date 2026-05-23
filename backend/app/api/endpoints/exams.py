@@ -4,7 +4,8 @@ from sqlalchemy import desc
 from pydantic import BaseModel
 from typing import List, Optional, Any
 from datetime import datetime
-from app.api.deps import get_db
+from app.api.deps import get_db, get_current_user, require_role
+from app.models.user import User
 from app.models.exam import ExamSession, QPSubmission, Notification
 from app.models.core import AuditLog
 import uuid
@@ -71,7 +72,7 @@ class AITransformRequest(BaseModel):
 # ---- Exam Session Endpoints ----
 
 @router.get("/sessions")
-def list_sessions(db: Session = Depends(get_db)):
+def list_sessions(db: Session = Depends(get_db), current_user: User = Depends(require_role(["COE", "SUPERADMIN"]))):
     sessions = db.query(ExamSession).order_by(desc(ExamSession.created_at)).all()
     result = []
     for s in sessions:
@@ -92,7 +93,7 @@ def list_sessions(db: Session = Depends(get_db)):
 
 
 @router.post("/sessions")
-def create_session(data: ExamSessionCreate, db: Session = Depends(get_db)):
+def create_session(data: ExamSessionCreate, db: Session = Depends(get_db), current_user: User = Depends(require_role(["COE", "SUPERADMIN"]))):
     session = ExamSession(
         title=data.title,
         department=data.department,
@@ -135,7 +136,7 @@ def create_session(data: ExamSessionCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/sessions/{session_id}")
-def update_session(session_id: str, data: ExamSessionUpdate, db: Session = Depends(get_db)):
+def update_session(session_id: str, data: ExamSessionUpdate, db: Session = Depends(get_db), current_user: User = Depends(require_role(["COE", "SUPERADMIN"]))):
     session = db.query(ExamSession).filter(ExamSession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -181,7 +182,7 @@ def update_session(session_id: str, data: ExamSessionUpdate, db: Session = Depen
 
 
 @router.delete("/sessions/{session_id}")
-def delete_session(session_id: str, db: Session = Depends(get_db)):
+def delete_session(session_id: str, db: Session = Depends(get_db), current_user: User = Depends(require_role(["COE", "SUPERADMIN"]))):
     session = db.query(ExamSession).filter(ExamSession.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -200,7 +201,7 @@ def delete_session(session_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/sessions/active")
-def get_active_blueprint(teacher_email: str, db: Session = Depends(get_db)):
+def get_active_blueprint(teacher_email: str, db: Session = Depends(get_db), current_user: User = Depends(require_role(["Internal Teacher", "SUPERADMIN"]))):
     """Get the latest active blueprint assigned to a teacher."""
     sessions = (
         db.query(ExamSession)
@@ -234,7 +235,7 @@ def get_active_blueprint(teacher_email: str, db: Session = Depends(get_db)):
 # ---- QP Submission Endpoints ----
 
 @router.get("/submissions")
-def list_submissions(teacher_email: Optional[str] = None, db: Session = Depends(get_db)):
+def list_submissions(teacher_email: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(QPSubmission)
     if teacher_email:
         query = query.filter(QPSubmission.teacher_email == teacher_email)
@@ -260,7 +261,7 @@ def list_submissions(teacher_email: Optional[str] = None, db: Session = Depends(
 
 
 @router.post("/submissions")
-def create_submission(data: QPSubmissionCreate, db: Session = Depends(get_db)):
+def create_submission(data: QPSubmissionCreate, db: Session = Depends(get_db), current_user: User = Depends(require_role(["Internal Teacher", "SUPERADMIN"]))):
     sub = QPSubmission(
         exam_session_id=data.exam_session_id if data.exam_session_id else None,
         title=data.title,
@@ -298,7 +299,7 @@ def create_submission(data: QPSubmissionCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/submissions/{sub_id}/review")
-def review_submission(sub_id: str, data: ReviewAction, db: Session = Depends(get_db)):
+def review_submission(sub_id: str, data: ReviewAction, db: Session = Depends(get_db), current_user: User = Depends(require_role(["COE", "SUPERADMIN"]))):
     sub = db.query(QPSubmission).filter(QPSubmission.id == sub_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
@@ -333,7 +334,7 @@ def review_submission(sub_id: str, data: ReviewAction, db: Session = Depends(get
 
 
 @router.post("/ai-transform")
-async def ai_transform(data: AITransformRequest):
+async def ai_transform(data: AITransformRequest, current_user: User = Depends(require_role(["Internal Teacher", "SUPERADMIN"]))):
     # Forward the request to the local AI microservice
     ai_service_url = "http://localhost:8001/generate"
     
@@ -377,7 +378,7 @@ async def ai_transform(data: AITransformRequest):
 # ---- Notification Endpoints ----
 
 @router.get("/notifications")
-def list_notifications(role: Optional[str] = None, email: Optional[str] = None, db: Session = Depends(get_db)):
+def list_notifications(role: Optional[str] = None, email: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(Notification).filter(Notification.is_read == False)
     if role:
         query = query.filter(Notification.to_role == role)
@@ -397,7 +398,7 @@ def list_notifications(role: Optional[str] = None, email: Optional[str] = None, 
 
 
 @router.delete("/notifications/clear")
-def clear_notifications(role: Optional[str] = None, email: Optional[str] = None, db: Session = Depends(get_db)):
+def clear_notifications(role: Optional[str] = None, email: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     query = db.query(Notification)
     if role:
         query = query.filter(Notification.to_role == role)

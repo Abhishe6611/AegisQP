@@ -25,7 +25,11 @@ export default function NotificationBell() {
 
   const fetchNotifications = useCallback(async (role: string, email: string) => {
     try {
-      const res = await fetch(`/api/v1/exams/notifications?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`);
+      const token = sessionStorage.getItem("access_token");
+      if (!token) return;
+      const res = await fetch(`/api/v1/exams/notifications?role=${encodeURIComponent(role)}&email=${encodeURIComponent(email)}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
@@ -36,7 +40,7 @@ export default function NotificationBell() {
   }, []);
 
   const fetchUserAndNotifications = useCallback(async () => {
-    const token = localStorage.getItem("access_token");
+    const token = sessionStorage.getItem("access_token");
     if (!token) return;
 
     try {
@@ -62,8 +66,10 @@ export default function NotificationBell() {
   const clearNotifications = async () => {
     if (!user) return;
     try {
+      const token = sessionStorage.getItem("access_token");
       const res = await fetch(`/api/v1/exams/notifications/clear?role=${encodeURIComponent(user.role)}&email=${encodeURIComponent(user.email)}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.ok) {
         setNotifications([]);
